@@ -10,8 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
-public class LibraryService {
-    // Group to (serviceName -> baseUrl) map
+public class ILLService {
+    // Group to (libraryName -> baseUrl) map
     private static final Map<String, Map<String, String>> groups = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
@@ -38,7 +38,7 @@ public class LibraryService {
         public void handle(HttpExchange exchange) throws IOException {
             if ("POST".equals(exchange.getRequestMethod())) {
                 String body = new String(exchange.getRequestBody().readAllBytes());
-                // Expect format: group=GROUP&name=SERVICE_NAME&url=BASE_URL
+                // Expect format: group=GROUP&name=LIBRARY_NAME&url=BASE_URL
                 Map<String, String> params = parseQuery(body);
                 String group = params.get("group");
                 String name = params.get("name");
@@ -64,7 +64,36 @@ public class LibraryService {
 
     static class RequestBookHandler implements HttpHandler {
         public void handle(HttpExchange exchange) throws IOException {
-            respond(exchange, 200, "requestBook stub hit");
+            if ("POST".equals(exchange.getRequestMethod())) {
+                String body = new String(exchange.getRequestBody().readAllBytes());
+                // Expect format: group=GROUP&name=LIBRARY_NAME&url=BASE_URL
+                Map<String, String> params = parseQuery(body);
+                String group = params.get("group");
+                String ISBN = params.get("isbn");
+                String author = params.get("author");
+                String title = params.get("title"); 
+                String libraryWithBook = null;
+                if (group != null) {
+                    for(String libraryName : groups.get(group).keySet()){
+                        /*XXX Send request for isAvailable to each library
+                        When one has it, take note of the library and break
+                        */
+                        boolean isAvailable = true;
+                        if(isAvailable){
+                            libraryWithBook = libraryName;
+                            break;
+                        }
+                    }
+                    if(libraryWithBook != null){
+                        respond(exchange, 200, libraryWithBook + " has the book.");
+                    }
+                    
+                } else {
+                    respond(exchange, 400, "Missing required fields");
+                }
+            } else {
+                respond(exchange, 405, "Method Not Allowed");
+            }
         }
     }
 
