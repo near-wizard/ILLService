@@ -107,7 +107,7 @@ public class ILLSocketServer {
                     break;
                 case "BOOK_LIST_RESPONSE":
                     List<IBook> books = (List<IBook>) msg.getData();
-                    System.out.println("Received book list: " + books.size() + " books");
+                    System.out.println("Received book list: " + books + " books");
                     break;
                 case "SEND_BOOK":
                     IBook book = (IBook) msg.getData();
