@@ -1,0 +1,20 @@
+# Ignore all compiled class files
+*.class
+
+# Optional: ignore compiled packages
+/bin/
+/out/
+/build/
+
+# IDE-specific (optional but recommended)
+# IntelliJ
+.idea/
+*.iml
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# VSCode
+.vscode/
