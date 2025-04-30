@@ -51,6 +51,12 @@ public class TestLibraryClient {
                     System.out.println("Book not found: " + requestedIsbn);
                 }
                 break;
+            case "RECEIVE_BOOK":
+                // Server tells us to receive a book
+                IBook book = (IBook) msg.getData();
+                sendMessage(new Message("BOOK_RECEIVED", book));
+                System.out.println("Book Received");
+                break;
             default:
                 System.out.println("Unknown server message: " + msg.getType());
         }

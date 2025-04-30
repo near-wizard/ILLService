@@ -47,7 +47,19 @@ public class ILLSocketServer {
                     } else {
                         System.out.println("No such group.");
                     }
-                } else {
+                 }else if (parts[0].equalsIgnoreCase("SEND") && parts.length == 3) {
+                    // XXX fix SEND 
+                    String groupId = parts[1];
+                    String isbn = parts[2];
+                    if (groupRegistry.containsKey(groupId)) {
+                        for (ClientHandler handler : groupRegistry.get(groupId)) {
+                            handler.requestBook(isbn);
+                        }
+                    } else {
+                        System.out.println("No such group.");
+                    }
+                }
+                else {
                     System.out.println("Invalid command.");
                 }
             }
@@ -124,6 +136,10 @@ public class ILLSocketServer {
 
         public void requestBook(String isbn) throws IOException {
             sendMessage(new Message("REQUEST_BOOK", isbn));
+        }
+
+        public void receiveBook(IBook book) throws IOException {
+            sendMessage(new Message("RECEIVE_BOOK", book));
         }
 
         private void sendMessage(Message msg) throws IOException {

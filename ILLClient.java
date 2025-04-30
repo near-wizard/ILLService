@@ -39,8 +39,19 @@ public class ILLClient {
             case "REQUEST_BOOK":
                 // Server tells us to send a book
                 String isbn = (String) msg.getData();
-                IBook book = findBookByISBN(isbn);
-                sendMessage(new Message("SEND_BOOK", book));
+                IBook requestedBook = findBookByISBN(isbn);
+                sendMessage(new Message("SEND_BOOK", requestedBook));
+
+                // TODO Insert function to handle inventory after sending book here
+
+                break;
+            case "RECEIVE_BOOK":
+                // Server tells us to receive a book
+                IBook book = (IBook) msg.getData();
+                sendMessage(new Message("BOOK_RECEIVED", book));
+
+                // TODO Insert function to handle inventory after receiving book here
+
                 break;
             default:
                 System.out.println("Unknown server message: " + msg.getType());
@@ -52,12 +63,13 @@ public class ILLClient {
         out.flush();
     }
 
-    // Stub methods for demo
+    // TODO return a list of available books
     private List<IBook> getAvailableBooks() {
         return List.of(); // Replace with actual list
     }
 
+    // TODO Replace with actual lookup, return null if not found
     private IBook findBookByISBN(String isbn) {
-        return null; // Replace with actual lookup
+        return null; 
     }
 }
