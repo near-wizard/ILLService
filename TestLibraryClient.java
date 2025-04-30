@@ -70,7 +70,7 @@ public class TestLibraryClient {
 
     public static void main(String[] args) {
         try {
-            new TestLibraryClient("localhost", 12345).start();
+            new TestLibraryClient("192.168.1.4", 12345).start();
         } catch (Exception e) {
             e.printStackTrace();
         }
