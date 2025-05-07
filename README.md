@@ -60,7 +60,11 @@ Don't worry about making changes, it listens to port 12345
 You can run it locally and hit the ip "localhost" or you can hit the server's ip address
 Right now, if you request a book, it asks everyone in the group, and may send multiple your way (eg: if 5 in the group, and 3 have it, it will send you 3 copies)
 
-Server-Client Architecture
+## TestClientLibrary
+Don't worry about this code
+Feel free to run it to test connecting to the server, but update the group and library name if you do
+
+## Server-Client Architecture
 
 
 (The point of this section is to give a high level understanding and explanation of what is happening under the hood, you can also skip this section and just use the code as a black box)
