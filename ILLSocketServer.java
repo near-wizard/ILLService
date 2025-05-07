@@ -7,7 +7,9 @@ import java.util.*;
 public class ILLSocketServer {
     private final int port;
     private MessageFactory messageFactory;
-    private final Map<String, Set<ClientHandler>> groupRegistry = new HashMap<>();
+    // Map<GroupId, Map<LibraryId, ClientHandler>>
+    private final Map<String, Map<String, ClientHandler>> groupRegistry = new HashMap<>();
+
 
     public ILLSocketServer(int port) {
         this.port = port;
@@ -34,8 +36,8 @@ public class ILLSocketServer {
 
                 if (parts[0].equalsIgnoreCase("LIST")) {
                     // Request all book lists from all groups
-                    for (Set<ClientHandler> group : groupRegistry.values()) {
-                        for (ClientHandler handler : group) {
+                    for (Map<String, ClientHandler> group : groupRegistry.values()) {
+                        for (ClientHandler handler : group.values()) {
                             handler.requestBookList();
                         }
                     }
@@ -43,18 +45,22 @@ public class ILLSocketServer {
                     String groupId = parts[1];
                     String isbn = parts[2];
                     if (groupRegistry.containsKey(groupId)) {
-                        for (ClientHandler handler : groupRegistry.get(groupId)) {
-                            handler.requestBook(isbn);
+                        Map<String, ClientHandler> group = groupRegistry.get(groupId);
+                        if (group != null) {
+                            for (ClientHandler handler : group.values()) {
+                                handler.requestBook(isbn);
+                            }
                         }
                     } else {
                         System.out.println("No such group.");
                     }
-                 }else if (parts[0].equalsIgnoreCase("SEND") && parts.length == 3) {
+                 } else if (parts[0].equalsIgnoreCase("SEND") && parts.length == 3) {
                     // XXX fix SEND 
                     String groupId = parts[1];
                     String isbn = parts[2];
                     if (groupRegistry.containsKey(groupId)) {
-                        for (ClientHandler handler : groupRegistry.get(groupId)) {
+                        Map<String, ClientHandler> group = groupRegistry.get(groupId);
+                        for (ClientHandler handler : group.values()) {
                             handler.requestBook(isbn);
                         }
                     } else {
@@ -109,7 +115,11 @@ public class ILLSocketServer {
             } catch (Exception e) {
                 System.out.println("Client disconnected.");
                 if (groupId != null) {
-                    groupRegistry.getOrDefault(groupId, Set.of()).remove(this);
+                    Map<String, ClientHandler> group = groupRegistry.get(groupId);
+                    if (group != null) {
+                        group.values().remove(this);
+                    }
+
                 }
             }
         }
@@ -118,8 +128,9 @@ public class ILLSocketServer {
             IBook book;
             switch (msg.getType()) {
                 case MessageTypes.REGISTER:
-                    groupId = (String) msg.getGroup();
-                    groupRegistry.computeIfAbsent(groupId, k -> new HashSet<>()).add(this);
+                    groupId = msg.getGroup();
+                    String libraryId = msg.getSender();
+                    groupRegistry.computeIfAbsent(groupId, g -> new HashMap<>()).put(libraryId, this);
                     System.out.println("Client registered to group: " + groupId);
                     break;
                 case MessageTypes.BOOK_LIST_RESPONSE:
@@ -130,9 +141,14 @@ public class ILLSocketServer {
                     // When book is requested, send to all in the group, then if any have it, send to the caller
                     book = (IBook) msg.getData();
                     System.out.println("Request receive.\n\t" + msg.getSender() + " Requests Group " + msg.getGroup() + " for "+ displayBook(book) );
-                    Set<ClientHandler> group = groupRegistry.get(msg.getGroup());
-                    for (ClientHandler handler : group) {
+                    Map<String, ClientHandler> group = groupRegistry.get(msg.getGroup());
+                    for (ClientHandler handler : group.values()) {
                         handler.askForBook(msg.getGroup(), book);
+                    }
+                    // After asking all for book, just send a copy regardless
+                    ClientHandler requester = groupRegistry.getOrDefault(msg.getGroup(), Map.of()).get(msg.getSender());
+                    if (requester != null) {
+                        requester.receiveBook(book);
                     }
                     break;
                 case MessageTypes.SEND_BOOK_SUCCESS:
@@ -141,6 +157,7 @@ public class ILLSocketServer {
                     break;
                 case MessageTypes.RECEIVE_BOOK_SUCCESS:
                     System.out.println("Book Received by" + msg.getSender());
+                    break;
                 default:
                     System.out.println("Unknown message type: " + msg.getType() + "From " + msg.getSender());
             }

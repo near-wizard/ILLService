@@ -117,6 +117,7 @@ public class ILLClient implements ILLInterface {
         TODO: Handles your inventory for when your library sends a book
     */
     private boolean sendBookInventoryManagement(IBook book){
+        System.out.println("Sending Book: " + book.getTitle());
         return true;
     }
 
@@ -124,6 +125,7 @@ public class ILLClient implements ILLInterface {
         TODO: Handles your inventory for when your library receives a book
     */
     private boolean receiveBookInventoryManagement(IBook book){
+        System.out.println("Receiving Book: " + book.getTitle());
         return true;
     }
 
