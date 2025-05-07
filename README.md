@@ -54,6 +54,11 @@ Just a collection of strings I use to indicate the type of message, could also m
 ## Message
 The actual objects being sent over the wire, the include the group, the sender, the type, and some payload or Object to deliver (eg: IBook)
 
+## ILLSocketServer
+
+Don't worry about making changes, it listens to port 12345
+You can run it locally and hit the ip "localhost" or you can hit the server's ip address
+Right now, if you request a book, it asks everyone in the group, and may send multiple your way (eg: if 5 in the group, and 3 have it, it will send you 3 copies)
 
 Server-Client Architecture
 
