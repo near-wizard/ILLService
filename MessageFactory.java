@@ -2,7 +2,7 @@ public class MessageFactory {
     private final String sender;
     private final String group;
 
-    public MessageFactory(String sender, String group) {
+    public MessageFactory(String group, String sender) {
         this.sender = sender;
         this.group = group;
     }

@@ -11,7 +11,7 @@ public class ILLSocketServer {
 
     public ILLSocketServer(int port) {
         this.port = port;
-        this.messageFactory = new MessageFactory("server", null);
+        this.messageFactory = new MessageFactory("serverGroup", "server");
     }
 
     public void start() throws IOException {
@@ -115,6 +115,7 @@ public class ILLSocketServer {
         }
 
         private void handleClientMessage(Message msg) throws IOException {
+            IBook book;
             switch (msg.getType()) {
                 case MessageTypes.REGISTER:
                     groupId = (String) msg.getGroup();
@@ -125,18 +126,32 @@ public class ILLSocketServer {
                     List<IBook> books = (List<IBook>) msg.getData();
                     System.out.println("Received book list: " + books + " books");
                     break;
-                case MessageTypes.SEND_BOOK_SUCCESS:
-                    IBook book = (IBook) msg.getData();
-                    System.out.println("Received book to lend: " + book.getTitle());
+                case MessageTypes.REQUEST_BOOK:
+                    // When book is requested, send to all in the group, then if any have it, send to the caller
+                    book = (IBook) msg.getData();
+                    System.out.println("Request receive.\n\t" + msg.getSender() + " Requests Group " + msg.getGroup() + " for "+ displayBook(book) );
+                    Set<ClientHandler> group = groupRegistry.get(msg.getGroup());
+                    for (ClientHandler handler : group) {
+                        handler.askForBook(msg.getGroup(), book);
+                    }
                     break;
-                case MessageTypes.RECEIVE_BOOK:
+                case MessageTypes.SEND_BOOK_SUCCESS:
+                    book = (IBook) msg.getData();
+                    System.out.println("Received book to lend: " + book.getTitle() + "From: " + msg.getSender());
+                    break;
+                case MessageTypes.RECEIVE_BOOK_SUCCESS:
+                    System.out.println("Book Received by" + msg.getSender());
                 default:
-                    System.out.println("Unknown message type: " + msg.getType());
+                    System.out.println("Unknown message type: " + msg.getType() + "From " + msg.getSender());
             }
         }
 
         public void requestBookList() throws IOException {
             sendMessage(this.messageFactory.createMessage("REQUEST_BOOK_LIST", null));
+        }
+
+        public void askForBook(String group, IBook book) throws IOException {
+            sendMessage(this.messageFactory.createMessage("SEND_BOOK", book, group));
         }
 
         public void requestBook(String isbn) throws IOException {
@@ -150,6 +165,10 @@ public class ILLSocketServer {
         private void sendMessage(Message msg) throws IOException {
             out.writeObject(msg);
             out.flush();
+        }
+
+        private String displayBook(IBook book){
+            return "\n\tTitle: " + book.getTitle() +"\n\tAuthor: " + book.getAuthor() + "\n\tisbn: " + book.getISBN();
         }
 
     }

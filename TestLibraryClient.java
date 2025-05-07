@@ -77,7 +77,10 @@ public class TestLibraryClient {
 
     public static void main(String[] args) {
         try {
-            new TestLibraryClient("173.255.234.247", 12345).start();
+            ILLClient client = new ILLClient("group1", "TheTower", "localhost", 12345);
+            client.start();
+            client.requestBook(new SimpleBook("Effective Java", "Joshua Bloch", "9780134685991"));
+            client.requestBook(new SimpleBook("Clean Code", "Robert C. Martin", "9780132350884"));
         } catch (Exception e) {
             e.printStackTrace();
         }
