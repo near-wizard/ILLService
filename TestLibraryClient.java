@@ -77,7 +77,9 @@ public class TestLibraryClient {
 
     public static void main(String[] args) {
         try {
-            ILLClient client = new ILLClient("group1", "TheTower", "localhost", 12345);
+            // TODO change group and libraryname
+            // ILLClient client = new ILLClient("group1", "myLibrary", "localhost", 12345);
+            ILLClient client = new ILLClient("group1", "myLibrary", "173.255.234.247", 12345);
             client.start();
             client.requestBook(new SimpleBook("Effective Java", "Joshua Bloch", "9780134685991"));
             client.requestBook(new SimpleBook("Clean Code", "Robert C. Martin", "9780132350884"));
