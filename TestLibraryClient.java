@@ -9,6 +9,7 @@ public class TestLibraryClient {
     private final int serverPort;
     private ObjectOutputStream out;
     private ObjectInputStream in;
+    private MessageFactory messageFactory;
     private final List<IBook> libraryBooks = new ArrayList<>();
 
     public TestLibraryClient(String serverHost, int serverPort) {
@@ -24,9 +25,9 @@ public class TestLibraryClient {
         Socket socket = new Socket(serverHost, serverPort);
         out = new ObjectOutputStream(socket.getOutputStream());
         in = new ObjectInputStream(socket.getInputStream());
-
+        messageFactory = new MessageFactory("testLibrary","testGroup");
         // Register with a group
-        sendMessage(new Message("REGISTER", "group1"));
+        sendMessage(this.messageFactory.createMessage("REGISTER", "group1"));
 
         // Listen for server messages
         while (true) {
@@ -39,14 +40,14 @@ public class TestLibraryClient {
         switch (msg.getType()) {
             case "REQUEST_BOOK_LIST":
                 System.out.println("Server requested book list.");
-                sendMessage(new Message("BOOK_LIST_RESPONSE", libraryBooks));
+                sendMessage(this.messageFactory.createMessage("BOOK_LIST_RESPONSE", libraryBooks));
                 break;
             case "REQUEST_BOOK":
                 String requestedIsbn = (String) msg.getData();
                 IBook found = findBookByISBN(requestedIsbn);
                 if (found != null) {
                     System.out.println("Sending book: " + found.getTitle());
-                    sendMessage(new Message("SEND_BOOK", found));
+                    sendMessage(this.messageFactory.createMessage("SEND_BOOK", found));
                 } else {
                     System.out.println("Book not found: " + requestedIsbn);
                 }
@@ -54,7 +55,7 @@ public class TestLibraryClient {
             case "RECEIVE_BOOK":
                 // Server tells us to receive a book
                 IBook book = (IBook) msg.getData();
-                sendMessage(new Message("BOOK_RECEIVED", book));
+                sendMessage(this.messageFactory.createMessage("BOOK_RECEIVED", book));
                 System.out.println("Book Received");
                 break;
             default:
@@ -76,7 +77,7 @@ public class TestLibraryClient {
 
     public static void main(String[] args) {
         try {
-            new TestLibraryClient("192.168.1.4", 12345).start();
+            new TestLibraryClient("173.255.234.247", 12345).start();
         } catch (Exception e) {
             e.printStackTrace();
         }

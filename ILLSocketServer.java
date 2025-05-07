@@ -6,10 +6,12 @@ import java.util.*;
 
 public class ILLSocketServer {
     private final int port;
+    private MessageFactory messageFactory;
     private final Map<String, Set<ClientHandler>> groupRegistry = new HashMap<>();
 
     public ILLSocketServer(int port) {
         this.port = port;
+        this.messageFactory = new MessageFactory("server", null);
     }
 
     public void start() throws IOException {
@@ -18,7 +20,7 @@ public class ILLSocketServer {
 
         while (true) {
             Socket clientSocket = serverSocket.accept();
-            new Thread(new ClientHandler(clientSocket)).start();
+            new Thread(new ClientHandler(clientSocket, this.messageFactory)).start();
         }
     }
 
@@ -88,9 +90,11 @@ public class ILLSocketServer {
         private ObjectInputStream in;
         private ObjectOutputStream out;
         private String groupId;
+        private MessageFactory messageFactory;
 
-        public ClientHandler(Socket socket) {
+        public ClientHandler(Socket socket, MessageFactory messageFactory) {
             this.socket = socket;
+            this.messageFactory = messageFactory;
         }
 
         public void run() {
@@ -112,34 +116,35 @@ public class ILLSocketServer {
 
         private void handleClientMessage(Message msg) throws IOException {
             switch (msg.getType()) {
-                case "REGISTER":
-                    groupId = (String) msg.getData();
+                case MessageTypes.REGISTER:
+                    groupId = (String) msg.getGroup();
                     groupRegistry.computeIfAbsent(groupId, k -> new HashSet<>()).add(this);
                     System.out.println("Client registered to group: " + groupId);
                     break;
-                case "BOOK_LIST_RESPONSE":
+                case MessageTypes.BOOK_LIST_RESPONSE:
                     List<IBook> books = (List<IBook>) msg.getData();
                     System.out.println("Received book list: " + books + " books");
                     break;
-                case "SEND_BOOK":
+                case MessageTypes.SEND_BOOK_SUCCESS:
                     IBook book = (IBook) msg.getData();
                     System.out.println("Received book to lend: " + book.getTitle());
                     break;
+                case MessageTypes.RECEIVE_BOOK:
                 default:
                     System.out.println("Unknown message type: " + msg.getType());
             }
         }
 
         public void requestBookList() throws IOException {
-            sendMessage(new Message("REQUEST_BOOK_LIST", null));
+            sendMessage(this.messageFactory.createMessage("REQUEST_BOOK_LIST", null));
         }
 
         public void requestBook(String isbn) throws IOException {
-            sendMessage(new Message("REQUEST_BOOK", isbn));
+            sendMessage(this.messageFactory.createMessage("REQUEST_BOOK", isbn));
         }
 
         public void receiveBook(IBook book) throws IOException {
-            sendMessage(new Message("RECEIVE_BOOK", book));
+            sendMessage(this.messageFactory.createMessage("RECEIVE_BOOK", book));
         }
 
         private void sendMessage(Message msg) throws IOException {
